@@ -69,6 +69,7 @@ class CCmakeGenerator {
      * @param CppMode Indicate if the compilation should happen in C++ mode
      * @param hasMain Indicate if the .lf file has a main reactor or not. If not,
      *  a library target will be created instead of an executable.
+     * @param cMakeExtras CMake-specific code that should be appended to the CMakeLists.txt.
      * @return The content of the CMakeLists.txt.
      */
     CodeBuilder generateCMakeCode(
@@ -76,7 +77,8 @@ class CCmakeGenerator {
             String executableName, 
             ErrorReporter errorReporter,
             boolean CppMode,
-            boolean hasMain) {
+            boolean hasMain,
+            String cMakeExtras) {
         CodeBuilder cMakeCode = new CodeBuilder();
         
         List<String> additionalSources = new ArrayList<String>();
@@ -99,12 +101,6 @@ class CCmakeGenerator {
         cMakeCode.pr("# Require C++17");
         cMakeCode.pr("set(CMAKE_CXX_STANDARD 17)");
         cMakeCode.pr("set(CMAKE_CXX_STANDARD_REQUIRED ON)");
-        cMakeCode.newLine();
-        
-        cMakeCode.pr("# Compile definitions\n");
-        targetConfig.compileDefinitions.forEach( (key, value) -> {
-            cMakeCode.pr("add_compile_definitions("+key+"="+value+")\n");
-        });
         cMakeCode.newLine();
         
         // Set the build type
@@ -150,7 +146,7 @@ class CCmakeGenerator {
         cMakeCode.pr(")");
         cMakeCode.newLine();
 
-        if (targetConfig.threads != 0 || targetConfig.tracing != null) {
+        if (targetConfig.threading || targetConfig.tracing != null) {
             // If threaded computation is requested, add a the threads option.
             cMakeCode.pr("# Find threads and link to it");
             cMakeCode.pr("find_package(Threads REQUIRED)");
@@ -160,9 +156,15 @@ class CCmakeGenerator {
             // If the LF program itself is threaded or if tracing is enabled, we need to define
             // NUMBER_OF_WORKERS so that platform-specific C files will contain the appropriate functions
             cMakeCode.pr("# Set the number of workers to enable threading");
-            cMakeCode.pr("target_compile_definitions( ${LF_MAIN_TARGET} PUBLIC NUMBER_OF_WORKERS="+targetConfig.threads+")");
+            cMakeCode.pr("target_compile_definitions( ${LF_MAIN_TARGET} PUBLIC NUMBER_OF_WORKERS="+targetConfig.workers+")");
             cMakeCode.newLine();
         }
+        
+        cMakeCode.pr("# Target definitions\n");
+        targetConfig.compileDefinitions.forEach( (key, value) -> {
+            cMakeCode.pr("target_compile_definitions( ${LF_MAIN_TARGET} PUBLIC "+key+"="+value+")\n");
+        });
+        cMakeCode.newLine();
         
         // Check if CppMode is enabled
         if (CppMode) {
@@ -238,6 +240,9 @@ class CCmakeGenerator {
         for (String includeFile : targetConfig.cmakeIncludesWithoutPath) {
             cMakeCode.pr("include(\""+includeFile+"\")");
         }
+        cMakeCode.newLine();
+        
+        cMakeCode.pr(cMakeExtras);
         cMakeCode.newLine();
         
         return cMakeCode;

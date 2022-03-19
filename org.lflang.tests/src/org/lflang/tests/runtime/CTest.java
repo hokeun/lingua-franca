@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.lflang.Target;
-import org.lflang.tests.AbstractTest;
+import org.lflang.tests.RuntimeTest;
 
 /**
  * Collection of tests for the C target.
@@ -41,14 +41,14 @@ import org.lflang.tests.AbstractTest;
  * then clicking "Run".*
  * @author Marten Lohstroh <marten@berkeley.edu>
  */
-public class CTest extends AbstractTest {
+public class CTest extends RuntimeTest {
 
     public CTest() {
         super(Target.C);
     }
 
     @Override
-    protected boolean supportsThreadsOption() {
+    protected boolean supportsSingleThreadedExecution() {
         return true;
     }
 
@@ -95,15 +95,8 @@ public class CTest extends AbstractTest {
 
     @Test
     @Override
-    public void runWithFourThreads() {
-        super.runWithFourThreads();
-    }
-
-    @Test
-    @Override
-    public void runSerializationTests() {
-        Assumptions.assumeFalse(isWindows(), Message.NO_WINDOWS_SUPPORT);
-        super.runSerializationTests();
+    public void runWithThreadingOff() {
+        super.runWithThreadingOff();
     }
 
     @Test

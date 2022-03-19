@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.lflang.ASTUtils;
-import org.lflang.JavaAstUtils;
+import org.lflang.ASTUtils;
 import org.lflang.generator.GeneratorBase;
 import org.lflang.lf.ReactorDecl;
 import org.lflang.lf.StateVar;
@@ -31,7 +31,7 @@ public class PythonStateGenerator {
      * Handle initialization for state variable
      * @param state a state variable
      */
-    private static String generatePythonInitializer(StateVar state) {
+    public static String generatePythonInitializer(StateVar state) {
         if (!ASTUtils.isInitialized(state)) {
             return "None";
         }

@@ -35,7 +35,6 @@ import java.util.Set;
 
 import org.lflang.ASTUtils;
 import org.lflang.ErrorReporter;
-import org.lflang.JavaAstUtils;
 import org.lflang.TimeValue;
 import org.lflang.generator.TriggerInstance.BuiltinTriggerVariable;
 import org.lflang.lf.Action;
@@ -649,9 +648,9 @@ public class ReactorInstance extends NamedInstance<Instantiation> {
     public TimeValue getTimeValue(Value v) {
         Parameter p = v.getParameter();
         if (p != null) {
-            return JavaAstUtils.getLiteralTimeValue(lookupParameterInstance(p).getInitialValue().get(0));
+            return ASTUtils.getLiteralTimeValue(lookupParameterInstance(p).getInitialValue().get(0));
         } else {
-            return JavaAstUtils.getLiteralTimeValue(v);
+            return ASTUtils.getLiteralTimeValue(v);
         }
     }
 
@@ -664,9 +663,9 @@ public class ReactorInstance extends NamedInstance<Instantiation> {
     public TimeValue getTimeValue(Delay d) {
         Parameter p = d.getParameter();
         if (p != null) {
-            return JavaAstUtils.getLiteralTimeValue(lookupParameterInstance(p).getInitialValue().get(0));
+            return ASTUtils.getLiteralTimeValue(lookupParameterInstance(p).getInitialValue().get(0));
         } else {
-            return JavaAstUtils.toTimeValue(d.getTime());
+            return ASTUtils.toTimeValue(d.getTime());
         }
     }
     
@@ -1061,8 +1060,14 @@ public class ReactorInstance extends NamedInstance<Instantiation> {
                 if (count < references.size() - 1) {
                     int portWidth = portInstance.width;
                     int portParentWidth = portInstance.parent.width;
+                    // If the port is being connected on the inside and there is
+                    // more than one port in the list, then we can only connect one
+                    // bank member at a time.
+                    if (reactor == this && references.size() > 1) {
+                        portParentWidth = 1;
+                    }
                     int widthBound = portWidth * portParentWidth;
-                    
+                                        
                     // If either of these widths cannot be determined, assume infinite.
                     if (portWidth < 0) widthBound = Integer.MAX_VALUE;
                     if (portParentWidth < 0) widthBound = Integer.MAX_VALUE;
